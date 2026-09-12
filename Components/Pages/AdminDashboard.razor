@@ -1,0 +1,598 @@
+@using BAGEBI.Data
+@using BAGEBI.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject AttendanceService AttendanceService
+@inject MenuCalculationService MenuService
+@inject UserSessionState SessionState
+@rendermode InteractiveServer
+
+<div class="admin-office-layout">
+
+    <!-- Formal Municipal Header -->
+    <header class="admin-topbar">
+        <div class="admin-title-area">
+            <h1 class="admin-page-title">bagebis daswrebis marTvis sistema</h1>
+            <span class="admin-page-subtitle">administracius paneli</span>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="admin-nav-tabs">
+            <button type="button" class="nav-tab-btn @(ActiveTab == "register" ? "active" : "")" @onclick='() => SetActiveTab("register")'>
+                daswrebis reestri
+            </button>
+            <button type="button" class="nav-tab-btn @(ActiveTab == "accumulator" ? "active" : "")" @onclick='() => SetActiveTab("accumulator")'>
+                damagrovebeli uwyisi
+            </button>
+        </nav>
+
+        <div class="admin-user-info">
+            <span class="user-badge">admini</span>
+            <button type="button" class="btn-logout-link" @onclick="() => SessionState.Logout()">gamosvla</button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="admin-content">
+
+        <!-- Toolbar / Filter Bar directly above the Data Table -->
+        <div class="admin-table-toolbar">
+            <div class="toolbar-title-section">
+                @if (ActiveTab == "register")
+                {
+                    <h2 class="table-section-title">dRiuri daswrebis reestri — @FilterDate.ToString("dd/MM/yyyy")</h2>
+                }
+                else
+                {
+                    <h2 class="table-section-title">
+                        damagrovebeli uwyisi (kvebis produqtebis xarji)
+                        @if (!IsAccumulatorRangeMode)
+                        {
+                            <span>— @AccumulatorStartDate.ToString("dd/MM/yyyy") (@GetDayName(AccumulatorStartDate.DayOfWeek))</span>
+                        }
+                        else
+                        {
+                            <span>— @AccumulatorStartDate.ToString("dd/MM/yyyy") -dan @AccumulatorEndDate.ToString("dd/MM/yyyy")-mde</span>
+                        }
+                    </h2>
+                }
+
+                <div class="quick-summary-chips">
+                    <span class="summary-chip">dRes: <strong>@TodayTotal.ToString("N0")</strong></span>
+                    <span class="summary-chip">am TveSi: <strong>@MonthTotal.ToString("N0")</strong></span>
+                    <span class="summary-chip">am wels: <strong>@YearTotal.ToString("N0")</strong></span>
+                    <span class="summary-chip">bagebi: <strong>63</strong></span>
+                </div>
+            </div>
+
+            <div class="filter-controls-row">
+                @if (ActiveTab == "register")
+                {
+                    <div class="filter-item">
+                        <label>TariRi:</label>
+                        <input type="date" @bind-value="FilterDate" @bind-value:after="ApplyFilters" @bind-value:format="yyyy-MM-dd" class="office-input" />
+                    </div>
+                    <div class="filter-item">
+                        <label>Tve:</label>
+                        <select @bind="FilterMonth" @bind:after="ApplyFilters" class="office-input">
+                            <option value="0">— yvela Tve —</option>
+                            @for (int m = 1; m <= 12; m++)
+                            {
+                                <option value="@m">@MonthName(m)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>weli:</label>
+                        <select @bind="FilterYear" @bind:after="ApplyFilters" class="office-input">
+                            @foreach (var y in AvailableYears)
+                            {
+                                <option value="@y">@y</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>bagebi:</label>
+                        <select @bind="FilterKindergarten" @bind:after="ApplyFilters" class="office-input">
+                            <option value="0">— yvela bagebi —</option>
+                            @foreach (var kg in AllKindergartens)
+                            {
+                                <option value="@kg.Id">@kg.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
+                else
+                {
+                    <div class="filter-item">
+                        <label>dRiuri TariRi:</label>
+                        <input type="date" @bind-value="FilterDate" @bind-value:after="OnDailyDateChanged" @bind-value:format="yyyy-MM-dd" class="office-input" />
+                    </div>
+                    <div class="filter-item">
+                        <label>dan (Sualedi):</label>
+                        <input type="date" @bind-value="FilterStartDate" @bind-value:after="ApplyFilters" class="office-input" />
+                    </div>
+                    <div class="filter-item">
+                        <label>mde (Sualedi):</label>
+                        <input type="date" @bind-value="FilterEndDate" @bind-value:after="ApplyFilters" class="office-input" />
+                    </div>
+                    <div class="filter-item">
+                        <label>bagebi:</label>
+                        <select @bind="FilterKindergarten" @bind:after="ApplyFilters" class="office-input">
+                            <option value="0">— yvela bagebi —</option>
+                            @foreach (var kg in AllKindergartens)
+                            {
+                                <option value="@kg.Id">@kg.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <div class="filter-actions">
+                    <button type="button" class="office-btn office-btn-primary" @onclick="ApplyFilters">gafitrva</button>
+                    <button type="button" class="office-btn office-btn-secondary" @onclick="ResetFilters">gaWra</button>
+                </div>
+            </div>
+        </div>
+
+        @if (ActiveTab == "register")
+        {
+            <!-- PRIMARY PROMINENT DAILY ATTENDANCE DATA TABLE -->
+            <div class="office-table-wrapper">
+                @if (IsLoading)
+                {
+                    <div class="office-loading">monacemebi tvirteba...</div>
+                }
+                else if (DailyOverview.Count == 0)
+                {
+                    <div class="office-empty">monacemi ar aris.</div>
+                }
+                else
+                {
+                    <table class="office-data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">#</th>
+                                <th>bagebis dasaxelaba</th>
+                                <th>TariRi</th>
+                                <th class="text-right">bavSvTa raodenoba</th>
+                                <th>statusi</th>
+                                <th>Cawerilia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in DailyOverview)
+                            {
+                                <tr class="@(item.IsSubmitted ? "row-submitted" : "row-pending")">
+                                    <td>@item.KindergartenId</td>
+                                    <td class="font-bold">@item.KindergartenName</td>
+                                    <td>@FilterDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-right count-column">
+                                        @(item.IsSubmitted ? item.ChildrenCount.ToString("N0") : "—")
+                                    </td>
+                                    <td>
+                                        @if (item.IsSubmitted)
+                                        {
+                                            <span class="status-badge badge-success">Senaxulia</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge badge-warning">ar aris</span>
+                                        }
+                                    </td>
+                                    <td class="text-muted">
+                                        @(item.RecordedAt.HasValue ? item.RecordedAt.Value.ToLocalTime().ToString("HH:mm") : "—")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="office-total-row">
+                                <td colspan="3">sul dRes (@DailyOverview.Count(x => x.IsSubmitted) / @DailyOverview.Count bagebi):</td>
+                                <td class="text-right count-column">@DailyOverview.Where(x => x.IsSubmitted).Sum(x => x.ChildrenCount).ToString("N0")</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+            </div>
+
+            <!-- SECONDARY REPORT TABLES (Monthly & Yearly Overview) -->
+            <div class="office-secondary-grid">
+                <!-- Monthly Aggregates Table -->
+                <div class="office-card-panel">
+                    <h3 class="panel-header-title">Tviuri anagariSi — @FilterYear w.</h3>
+                    @if (MonthlyStats.Count == 0)
+                    {
+                        <div class="office-empty">monacemi ar aris.</div>
+                    }
+                    else
+                    {
+                        <table class="office-data-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Tve</th>
+                                    <th class="text-right">sul bavSvebi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in MonthlyStats)
+                                {
+                                    <tr>
+                                        <td>@MonthName(s.Month)</td>
+                                        <td class="text-right count-column">@s.Total.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="office-total-row">
+                                    <td>sul wels:</td>
+                                    <td class="text-right count-column">@MonthlyStats.Sum(s => s.Total).ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+                </div>
+
+                <!-- Yearly Aggregates Table -->
+                <div class="office-card-panel">
+                    <h3 class="panel-header-title">wliuri anagariSi</h3>
+                    @if (YearlyStats.Count == 0)
+                    {
+                        <div class="office-empty">monacemi ar aris.</div>
+                    }
+                    else
+                    {
+                        <table class="office-data-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th>weli</th>
+                                    <th class="text-right">sul bavSvebi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in YearlyStats)
+                                {
+                                    <tr>
+                                        <td>@s.Year</td>
+                                        <td class="text-right count-column">@s.Total.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        }
+        else if (ActiveTab == "accumulator")
+        {
+            <!-- CUMULATIVE ACCUMULATOR REPORT PAGE (დამაგროვებელი უწყისი) -->
+            <div class="office-table-wrapper">
+                @if (IsLoading)
+                {
+                    <div class="office-loading">monacemebi tvirteba...</div>
+                }
+                else
+                {
+                    <table class="office-data-table accumulator-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">N</th>
+                                <th>produqti</th>
+                                <th>
+                                    @if (!IsAccumulatorRangeMode)
+                                    {
+                                        <span>ერთ. ნორმა (@GetDayName(AccumulatorStartDate.DayOfWeek))</span>
+                                    }
+                                    else
+                                    {
+                                        <span>ერთეული</span>
+                                    }
+                                </th>
+                                <th class="text-right">
+                                    @if (!IsAccumulatorRangeMode)
+                                    {
+                                        <span>სულ ბავშვები</span>
+                                    }
+                                    else
+                                    {
+                                        <span>სულ ბავშვები (კაცი/დღე)</span>
+                                    }
+                                </th>
+                                <th class="text-right">სულ გახარჯული (ჯამი)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in AccumulatorItems)
+                            {
+                                <tr>
+                                    <td>@item.ProductId</td>
+                                    <td class="font-bold">@item.ProductName</td>
+                                    <td>
+                                        @if (!IsAccumulatorRangeMode)
+                                        {
+                                            if (item.SingleNorm <= 0)
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@item.SingleNorm @(item.Unit == "ცალი" ? "ცალი" : "გრ.")</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span>@(item.Unit == "ცალი" ? "ცალი" : "გრ.")</span>
+                                        }
+                                    </td>
+                                    <td class="text-right">@AccumulatorTotalChildrenDays.ToString("N0")</td>
+                                    <td class="text-right count-column">@item.DisplayString</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="office-total-row">
+                                <td colspan="3">
+                                    @if (!IsAccumulatorRangeMode)
+                                    {
+                                        <span>სულ გახარჯული პროდუქტი (@DailyOverview.Count(x => x.IsSubmitted) ბაღი):</span>
+                                    }
+                                    else
+                                    {
+                                        <span>სულ გახარჯული პროდუქტი (@AccumulatorStartDate.ToString("dd/MM/yyyy") — @AccumulatorEndDate.ToString("dd/MM/yyyy")):</span>
+                                    }
+                                </td>
+                                <td class="text-right">@AccumulatorTotalChildrenDays.ToString("N0")</td>
+                                <td class="text-right count-column">28 დასახელება</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+            </div>
+        }
+
+    </main>
+</div>
+
+@code {
+    private string ActiveTab { get; set; } = "register";
+
+    private DateTime FilterDate { get; set; } = DateTime.Today;
+    private DateTime? FilterStartDate { get; set; } = null;
+    private DateTime? FilterEndDate { get; set; } = null;
+    private int FilterMonth { get; set; } = DateTime.Today.Month;
+    private int FilterYear { get; set; } = DateTime.Today.Year;
+    private int FilterKindergarten { get; set; } = 0;
+
+    private List<int> AvailableYears { get; set; } = new() { 2024, 2025, 2026, 2027 };
+
+    private List<Kindergarten> AllKindergartens { get; set; } = new();
+    private List<DailyOverviewItem> DailyOverview { get; set; } = new();
+    private List<AttendanceService.MonthStat> MonthlyStats { get; set; } = new();
+    private List<AttendanceService.YearStat> YearlyStats { get; set; } = new();
+
+    private List<AccumulatorReportItem> AccumulatorItems { get; set; } = new();
+    private int AccumulatorTotalChildrenDays { get; set; } = 0;
+    private int AccumulatorSubmittedCount { get; set; } = 0;
+    private bool IsAccumulatorRangeMode { get; set; } = false;
+    private DateTime AccumulatorStartDate { get; set; } = DateTime.Today;
+    private DateTime AccumulatorEndDate { get; set; } = DateTime.Today;
+
+    private bool IsLoading { get; set; } = true;
+
+    private long TodayTotal { get; set; }
+    private long MonthTotal { get; set; }
+    private long YearTotal { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AllKindergartens = await AttendanceService.GetAllKindergartensAsync();
+        await LoadAllData();
+    }
+
+    private void SetActiveTab(string tab)
+    {
+        ActiveTab = tab;
+    }
+
+    private async Task ApplyFilters() => await LoadAllData();
+
+    private async Task OnDailyDateChanged()
+    {
+        FilterStartDate = null;
+        FilterEndDate = null;
+        await LoadAllData();
+    }
+
+    private async Task ResetFilters()
+    {
+        FilterDate = DateTime.Today;
+        FilterStartDate = null;
+        FilterEndDate = null;
+        FilterMonth = DateTime.Today.Month;
+        FilterYear = DateTime.Today.Year;
+        FilterKindergarten = 0;
+        await LoadAllData();
+    }
+
+    private async Task LoadAllData()
+    {
+        IsLoading = true;
+
+        int? kgFilter = FilterKindergarten == 0 ? null : FilterKindergarten;
+
+        // Load daily records for target date
+        var allTodayRecords = await AttendanceService.GetRecordsForDateAsync(FilterDate);
+        var recordMap = allTodayRecords.ToDictionary(r => r.KindergartenId);
+
+        var targetKgs = kgFilter.HasValue
+            ? AllKindergartens.Where(k => k.Id == kgFilter.Value).ToList()
+            : AllKindergartens;
+
+        DailyOverview = targetKgs
+            .Select(kg =>
+            {
+                bool hasRec = recordMap.TryGetValue(kg.Id, out var rec);
+                return new DailyOverviewItem
+                {
+                    KindergartenId = kg.Id,
+                    KindergartenName = kg.Name,
+                    IsSubmitted = hasRec,
+                    ChildrenCount = hasRec ? rec!.ChildrenCount : 0,
+                    RecordedAt = hasRec ? rec!.RecordedAt : null
+                };
+            })
+            .OrderBy(item => item.KindergartenId)
+            .ToList();
+
+        // Monthly stats
+        int effectiveMonth = FilterMonth == 0 ? 0 : FilterMonth;
+        if (effectiveMonth != 0)
+        {
+            var monthRecs = await AttendanceService.GetRecordsForMonthAsync(FilterYear, FilterMonth, kgFilter);
+            MonthlyStats = new List<AttendanceService.MonthStat>
+            {
+                new(FilterMonth, monthRecs.Sum(r => r.ChildrenCount))
+            };
+        }
+        else
+        {
+            MonthlyStats = await AttendanceService.GetMonthlyStatsAsync(FilterYear, kgFilter);
+        }
+
+        // Yearly stats
+        YearlyStats = await AttendanceService.GetYearlyStatsAsync(kgFilter);
+
+        // Overall summary totals
+        TodayTotal = (await AttendanceService.GetRecordsForDateAsync(DateTime.Today)).Sum(r => r.ChildrenCount);
+        var curMonthStats = await AttendanceService.GetMonthlyStatsAsync(DateTime.Today.Year);
+        MonthTotal = curMonthStats.Where(s => s.Month == DateTime.Today.Month).Sum(s => s.Total);
+        YearTotal = (await AttendanceService.GetYearlyStatsAsync()).Where(s => s.Year == DateTime.Today.Year).Sum(s => s.Total);
+
+        // Load Accumulator Report Data
+        await LoadAccumulatorData(kgFilter);
+
+        IsLoading = false;
+    }
+
+    private async Task LoadAccumulatorData(int? kgFilter)
+    {
+        bool isRangeMode = FilterStartDate.HasValue && FilterEndDate.HasValue && FilterStartDate.Value.Date != FilterEndDate.Value.Date;
+
+        DateTime start = isRangeMode ? FilterStartDate!.Value.Date : FilterDate.Date;
+        DateTime end = isRangeMode ? FilterEndDate!.Value.Date : FilterDate.Date;
+
+        if (end < start)
+        {
+            (start, end) = (end, start);
+        }
+
+        var rangeRecords = await AttendanceService.GetRecordsForDateRangeAsync(start, end, kgFilter);
+        AccumulatorSubmittedCount = rangeRecords.Count;
+
+        var recordsByDate = rangeRecords
+            .GroupBy(r => r.Date.Date)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        bool isSingleDay = start == end;
+
+        var items = MenuCalculationService.Products.Select(p => new AccumulatorReportItem
+        {
+            ProductId = p.Id,
+            ProductName = p.Name,
+            Unit = p.Unit,
+            SingleNorm = isSingleDay ? p.GetNormForDay(start.DayOfWeek) : 0m
+        }).ToList();
+
+        int grandTotalChildrenDays = 0;
+
+        for (var dt = start; dt <= end; dt = dt.AddDays(1))
+        {
+            if (recordsByDate.TryGetValue(dt, out var dayRecords))
+            {
+                int dayChildren = dayRecords.Sum(r => r.ChildrenCount);
+                grandTotalChildrenDays += dayChildren;
+                var dow = dt.DayOfWeek;
+
+                foreach (var item in items)
+                {
+                    var prodNorm = MenuCalculationService.Products.First(p => p.Id == item.ProductId).GetNormForDay(dow);
+                    if (prodNorm > 0 && dayChildren > 0)
+                    {
+                        decimal dailyQty = dayChildren * prodNorm;
+                        if (item.Unit == "ცალი" || item.ProductName == "კვერცხი")
+                        {
+                            dailyQty = MenuCalculationService.RoundEggQuantity(dailyQty);
+                        }
+                        item.TotalQuantityGramsOrUnits += dailyQty;
+                        item.TotalChildrenDays += dayChildren;
+                    }
+                }
+            }
+        }
+
+        AccumulatorTotalChildrenDays = grandTotalChildrenDays;
+        IsAccumulatorRangeMode = isRangeMode;
+        AccumulatorStartDate = start;
+        AccumulatorEndDate = end;
+
+        foreach (var item in items)
+        {
+            decimal totalGramsOrUnits = item.TotalQuantityGramsOrUnits;
+            item.TotalDisplayQuantity = item.Unit == "ცალი" ? totalGramsOrUnits : totalGramsOrUnits / 1000m;
+            item.DisplayString = totalGramsOrUnits <= 0
+                ? "—"
+                : (item.Unit == "ცალი" ? $"{totalGramsOrUnits:N0} ცალი" : $"{item.TotalDisplayQuantity:N3} {item.Unit}");
+        }
+
+        AccumulatorItems = items;
+    }
+
+    private static string MonthName(int m) => m switch
+    {
+        1 => "ianvari",
+        2 => "Tebervali",
+        3 => "marti",
+        4 => "aprili",
+        5 => "maisi",
+        6 => "ivnisi",
+        7 => "ivlisi",
+        8 => "agvisto",
+        9 => "seqtemberi",
+        10 => "oqtomberi",
+        11 => "novemberi",
+        12 => "dekemberi",
+        _ => m.ToString()
+    };
+
+    private static string GetDayName(DayOfWeek dow) => dow switch
+    {
+        DayOfWeek.Monday => "orSabaTi",
+        DayOfWeek.Tuesday => "samSabaTi",
+        DayOfWeek.Wednesday => "otxSabaTi",
+        DayOfWeek.Thursday => "xutSabaTi",
+        DayOfWeek.Friday => "paraskevi",
+        DayOfWeek.Saturday => "SabaTi",
+        DayOfWeek.Sunday => "kvira",
+        _ => dow.ToString()
+    };
+
+    private class DailyOverviewItem
+    {
+        public int KindergartenId { get; set; }
+        public string KindergartenName { get; set; } = string.Empty;
+        public bool IsSubmitted { get; set; }
+        public int ChildrenCount { get; set; }
+        public DateTime? RecordedAt { get; set; }
+    }
+
+    private class AccumulatorReportItem
+    {
+        public int ProductId { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
+        public decimal SingleNorm { get; set; }
+        public int TotalChildrenDays { get; set; }
+        public decimal TotalQuantityGramsOrUnits { get; set; }
+        public decimal TotalDisplayQuantity { get; set; }
+        public string DisplayString { get; set; } = string.Empty;
+    }
+}

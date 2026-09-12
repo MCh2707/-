@@ -1,0 +1,796 @@
+@font-face {
+  font-family: "MyCustomFont";
+  src: url("../agremyn.ttf?v=1") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+/* Global Body & Layout Wrapper */
+body {
+  background-color: #669bbc;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+/* Page Container: Perfect Vertical & Horizontal Centering */
+.page-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 10px;
+}
+
+/* Dashboard container: full-width, scroll from top */
+.dash-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 10px;
+}
+
+/* Base Container Section (Centered Login Card) */
+.section {
+  display: flex;
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 20px;
+  flex-direction: column;
+  width: 100%;
+  max-width: 650px;
+  margin: auto;
+  box-shadow: 0 10px 30px rgba(0, 48, 73, 0.15);
+}
+
+.section-wide {
+  max-width: 100%;
+  padding: 20px;
+  align-self: flex-start;
+}
+
+.section h1 {
+  font-size: 28px;
+  padding: 15px 0;
+  font-weight: 300;
+  color: #003049;
+  text-align: center;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.section h2 {
+  font-size: 22px;
+  color: #003049;
+  margin-bottom: 15px;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+/* Form Controls */
+.section input,
+.section select {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 40px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  font-size: 18px;
+  outline: none;
+  background-color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+/* ONLY REGISTRATION PAGE INPUTS REMOVE CUSTOM FONT */
+.login-section input {
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-weight: 400 !important;
+}
+
+.section input:focus,
+.section select:focus {
+  border-color: #003049;
+  box-shadow: 0 0 0 3px rgba(0, 48, 73, 0.2);
+}
+
+.section button,
+.btn {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 40px;
+  margin-bottom: 15px;
+  border: 1px solid #003049;
+  font-weight: 900;
+  font-size: 18px;
+  background-color: #003049;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.section button:hover,
+.btn:hover {
+  background-color: #669bbc;
+  color: #003049;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: #fff;
+}
+.btn-secondary:hover {
+  background-color: #5a6268;
+  color: #fff;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 20px;
+  width: auto;
+  margin-bottom: 0;
+}
+
+/* Header Controls */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.dashboard-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.alert-error {
+  width: 100%;
+  padding: 12px 18px;
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+  border-radius: 12px;
+  font-size: 15px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.alert-success {
+  width: 100%;
+  padding: 12px 18px;
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #badbcc;
+  border-radius: 12px;
+  font-size: 15px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   KINDERGARTEN DASHBOARD  (simple day-count view)
+══════════════════════════════════════════════════════════════ */
+.kg-dashboard {
+  max-width: 540px;
+  gap: 0;
+  padding: 30px;
+}
+
+.kg-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
+  margin-bottom: 20px;
+}
+
+.kg-header h1 {
+  font-size: 26px;
+  padding: 0;
+  color: #003049;
+  text-align: center;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.datetime-block {
+  width: 100%;
+  background: linear-gradient(135deg, #003049 0%, #1a6b8a 100%);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 48, 73, 0.2);
+}
+
+.date-label {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.time-label {
+  font-size: 46px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.entry-card {
+  width: 100%;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.entry-prompt {
+  font-size: 20px;
+  font-weight: 700;
+  color: #003049;
+  text-align: center;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.entry-row {
+  display: flex;
+  justify-content: center;
+}
+
+.count-input {
+  width: 180px !important;
+  padding: 16px !important;
+  font-size: 38px !important;
+  text-align: center !important;
+  border-radius: 12px !important;
+  border: 2px solid #003049 !important;
+  font-weight: 700 !important;
+  margin-bottom: 0 !important;
+  font-family: "MyCustomFont", sans-serif !important;
+}
+
+.save-btn {
+  font-size: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 0;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ADMIN DASHBOARD (Municipal Office Data Management Interface)
+══════════════════════════════════════════════════════════════ */
+.admin-office-layout {
+  width: 100%;
+  max-width: 1350px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background-color: #003049;
+  color: #ffffff;
+  border-bottom: 2px solid #002133;
+}
+
+.admin-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-page-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+  font-family: "MyCustomFont", sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.admin-nav-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-tab-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "MyCustomFont", sans-serif;
+  transition: all 0.2s ease;
+}
+
+.nav-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.nav-tab-btn.active {
+  background: #ffffff;
+  color: #003049;
+  border-color: #ffffff;
+}
+
+.admin-content {
+  padding: 20px;
+  background-color: #f8fafc;
+}
+
+/* Action buttons row */
+.action-buttons-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.btn-next {
+  background-color: #15803d;
+  color: #ffffff;
+  border: 1px solid #166534;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.btn-next:hover {
+  background-color: #166534;
+}
+
+/* Modal Window Console Style */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-console-window {
+  background: #ffffff;
+  width: 90%;
+  max-width: 650px;
+  max-height: 85vh;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-console-header {
+  background-color: #003049;
+  color: #ffffff;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-console-header h3 {
+  font-size: 16px;
+  margin: 0;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-console-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-summary-banner {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 10px 14px;
+  border-radius: 4px;
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-family: "MyCustomFont", sans-serif;
+  color: #334155;
+}
+
+.modal-summary-banner strong {
+  color: #003049;
+}
+
+.console-food-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.console-food-table th {
+  background-color: #f8fafc;
+  border-bottom: 2px solid #cbd5e1;
+  padding: 8px 10px;
+  text-align: left;
+  color: #003049;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.console-food-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #e2e8f0;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.modal-console-footer {
+  padding: 12px 18px;
+  background-color: #f8fafc;
+  border-top: 1px solid #cbd5e1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Toolbar & Filters */
+.admin-table-toolbar {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.toolbar-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+}
+
+.table-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #003049;
+  font-family: "MyCustomFont", sans-serif;
+  margin: 0;
+}
+
+.quick-summary-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.summary-chip {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-size: 13px;
+  color: #334155;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.summary-chip strong {
+  color: #003049;
+}
+
+.filter-controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.filter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-item label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #003049;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.office-input {
+  padding: 6px 10px !important;
+  border: 1px solid #94a3b8 !important;
+  border-radius: 3px !important;
+  font-size: 13px !important;
+  margin-bottom: 0 !important;
+  background-color: #ffffff !important;
+  font-family: "MyCustomFont", sans-serif !important;
+  min-width: 120px;
+}
+
+.office-btn {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-family: "MyCustomFont", sans-serif;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 700;
+  border: none;
+  width: auto;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.office-btn-primary {
+  background-color: #003049;
+  color: #ffffff;
+  border: 1px solid #002133;
+}
+
+.office-btn-primary:hover {
+  background-color: #669bbc;
+  color: #003049;
+}
+
+.office-btn-secondary {
+  background-color: #e2e8f0;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.office-btn-secondary:hover {
+  background-color: #cbd5e1;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* OFFICE PRIMARY DATA TABLE */
+.office-table-wrapper {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.office-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.office-data-table th {
+  background-color: #003049;
+  color: #ffffff;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-family: "MyCustomFont", sans-serif;
+  border-bottom: 2px solid #002133;
+  white-space: nowrap;
+}
+
+.office-data-table td {
+  padding: 8px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.office-data-table tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.office-data-table tr:hover td {
+  background-color: #f1f5f9;
+}
+
+.row-pending td {
+  color: #64748b;
+}
+
+.font-bold {
+  font-weight: 700;
+  color: #003049;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-muted {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.count-column {
+  font-size: 14px;
+  font-weight: 700;
+  color: #003049;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.badge-success {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.badge-warning {
+  background-color: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.office-total-row td {
+  background-color: #003049 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 14px;
+  border-top: 2px solid #002133;
+}
+
+.office-total-row .count-column {
+  color: #ffffff !important;
+}
+
+.office-loading, .office-empty {
+  padding: 24px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+/* SECONDARY REPORT TABLES GRID */
+.office-secondary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.office-card-panel {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.panel-header-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #003049;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+  font-family: "MyCustomFont", sans-serif;
+}
+
+.compact-table td, .compact-table th {
+  padding: 7px 12px;
+}
+
+.total-row .count-cell { color: #ffffff !important; }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .section {
+    width: 95%;
+    padding: 20px;
+  }
+  .kg-dashboard {
+    padding: 20px;
+  }
+  .time-label {
+    font-size: 36px;
+  }
+  .stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .section h1 {
+    font-size: 22px;
+  }
+  .stat-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stat-value {
+    font-size: 22px;
+  }
+  .time-label {
+    font-size: 30px;
+  }
+  .count-input {
+    width: 140px !important;
+    font-size: 30px !important;
+  }
+}

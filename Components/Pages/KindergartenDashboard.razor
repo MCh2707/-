@@ -1,0 +1,205 @@
+@using BAGEBI.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject AttendanceService AttendanceService
+@inject MenuCalculationService MenuService
+@inject UserSessionState SessionState
+@rendermode InteractiveServer
+@implements IDisposable
+
+<section class="section kg-dashboard">
+
+    <!-- Title Header -->
+    <div class="kg-header">
+        <h1>@SessionState.KindergartenName</h1>
+    </div>
+
+    <!-- Date & Time display -->
+    <div class="datetime-block">
+        <div class="date-label">@FormattedDate</div>
+        <div class="time-label">@CurrentTime</div>
+    </div>
+
+    <!-- Entry card -->
+    <div class="entry-card">
+        <p class="entry-prompt">dRes bavSvTa raodenoba:</p>
+
+        <div class="entry-row">
+            <input type="number"
+                   min="0"
+                   max="9999"
+                   @bind-value="ChildrenCount"
+                   placeholder="0"
+                   class="count-input" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(SuccessMessage))
+        {
+            <div class="alert-success">@SuccessMessage</div>
+        }
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert-error">@ErrorMessage</div>
+        }
+
+        <div class="action-buttons-row">
+            <button type="button" class="btn save-btn" @onclick="SaveAttendance" disabled="@IsSaving">
+                @(IsSaving ? "inaxeba..." : "gagzavna (Senaxva)")
+            </button>
+
+            @if (HasSubmitted)
+            {
+                <button type="button" class="btn btn-next" @onclick="OpenFoodModal">
+                    Semdegi &rarr;
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Daily Food Calculation Modal -->
+    @if (IsFoodModalOpen)
+    {
+        <div class="modal-backdrop" @onclick="CloseFoodModal">
+            <div class="modal-console-window" @onclick:stopPropagation>
+                <div class="modal-console-header">
+                    <h3>dRiuri menius anagariSi — @GetDayName(DateTime.Today.DayOfWeek)</h3>
+                    <button type="button" class="close-btn" @onclick="CloseFoodModal">&times;</button>
+                </div>
+                <div class="modal-console-body">
+                    <div class="modal-summary-banner">
+                        <span>baRi: <strong>@SessionState.KindergartenName</strong></span>
+                        <span>daswreba: <strong>@ChildrenCount bavSvi</strong></span>
+                    </div>
+
+                    <table class="console-food-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>produqti</th>
+                                <th>norma 1 bavSvze</th>
+                                <th class="text-right">gasacemi raodenoba</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (CalculatedFoodItems.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center">am dRes meniu ar aris gansazRvruli.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                int idx = 1;
+                                @foreach (var item in CalculatedFoodItems)
+                                {
+                                    <tr>
+                                        <td>@(idx++)</td>
+                                        <td class="font-bold">@item.ProductName</td>
+                                        <td>@item.NormPerChild @(item.Unit == "ცალი" ? "ცალი" : "გრ.")</td>
+                                        <td class="text-right count-column">@item.DisplayString</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-console-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" @onclick="CloseFoodModal">daXurva</button>
+                </div>
+            </div>
+        </div>
+    }
+
+</section>
+
+@code {
+    private int ChildrenCount { get; set; } = 0;
+    private string SuccessMessage { get; set; } = string.Empty;
+    private string ErrorMessage { get; set; } = string.Empty;
+    private bool IsSaving { get; set; } = false;
+    private bool HasSubmitted { get; set; } = false;
+
+    private bool IsFoodModalOpen { get; set; } = false;
+    private List<FoodCalculationResult> CalculatedFoodItems { get; set; } = new();
+
+    private string FormattedDate => DateTime.Now.ToString("MMMM dd, yyyy");
+    private string CurrentTime => DateTime.Now.ToString("HH:mm");
+
+    private System.Threading.Timer? _clockTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load today's already-saved count if any
+        if (SessionState.KindergartenId.HasValue)
+        {
+            var saved = await AttendanceService.GetTodayCountAsync(SessionState.KindergartenId.Value);
+            if (saved.HasValue)
+            {
+                ChildrenCount = saved.Value;
+                HasSubmitted = true;
+            }
+        }
+
+        _clockTimer = new System.Threading.Timer(_ =>
+        {
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
+    }
+
+    private async Task SaveAttendance()
+    {
+        SuccessMessage = string.Empty;
+        ErrorMessage = string.Empty;
+
+        if (!SessionState.KindergartenId.HasValue)
+        {
+            ErrorMessage = "Sesabamisi baRi ver moinaxna.";
+            return;
+        }
+
+        IsSaving = true;
+        try
+        {
+            await AttendanceService.SaveDailyAttendanceAsync(
+                SessionState.KindergartenId.Value,
+                DateTime.Today,
+                ChildrenCount,
+                SessionState.CurrentUser!);
+
+            HasSubmitted = true;
+            SuccessMessage = $"Senaxulia: {ChildrenCount} bavSvi — {FormattedDate}";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Senaxvisas moxda Secdoma: {ex.Message}";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void OpenFoodModal()
+    {
+        CalculatedFoodItems = MenuService.CalculateFoodForChildren(ChildrenCount, DateTime.Today.DayOfWeek);
+        IsFoodModalOpen = true;
+    }
+
+    private void CloseFoodModal()
+    {
+        IsFoodModalOpen = false;
+    }
+
+    private static string GetDayName(DayOfWeek dow) => dow switch
+    {
+        DayOfWeek.Monday => "orSabaTi",
+        DayOfWeek.Tuesday => "samSabaTi",
+        DayOfWeek.Wednesday => "otxSabaTi",
+        DayOfWeek.Thursday => "xutSabaTi",
+        DayOfWeek.Friday => "paraskevi",
+        DayOfWeek.Saturday => "SabaTi",
+        DayOfWeek.Sunday => "kvira",
+        _ => dow.ToString()
+    };
+
+    public void Dispose() => _clockTimer?.Dispose();
+}

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37216.2 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BAGEBI", "BAGEBI.csproj", "{CADA3818-29A7-4E5D-A203-B3C9ED1511FD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CADA3818-29A7-4E5D-A203-B3C9ED1511FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CADA3818-29A7-4E5D-A203-B3C9ED1511FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CADA3818-29A7-4E5D-A203-B3C9ED1511FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CADA3818-29A7-4E5D-A203-B3C9ED1511FD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B0FC7743-6627-4E63-A5E3-745CC41C0DE7}
+	EndGlobalSection
+EndGlobal

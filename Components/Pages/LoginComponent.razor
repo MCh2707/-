@@ -1,0 +1,64 @@
+@using BAGEBI.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject AuthService AuthService
+@inject UserSessionState SessionState
+@rendermode InteractiveServer
+
+<section class="section login-section">
+    <h1>registacia</h1>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert-error">
+            @ErrorMessage
+        </div>
+    }
+
+    <EditForm Model="this" OnValidSubmit="HandleLogin" FormName="LoginForm" class="login-form">
+        <input type="text" 
+               @bind-value="Username" 
+               name="Username"
+               placeholder="Account Name" 
+               required />
+
+        <input type="password" 
+               @bind-value="Password" 
+               name="Password"
+               id="password" 
+               placeholder="Password" 
+               required />
+
+        <button type="submit">angariSze Sesvla</button>
+    </EditForm>
+</section>
+
+@code {
+    [SupplyParameterFromForm]
+    private string Username { get; set; } = string.Empty;
+
+    [SupplyParameterFromForm]
+    private string Password { get; set; } = string.Empty;
+
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
+        {
+            ErrorMessage = "gtxovt Seiyvanot momxmarebeli da paroli";
+            return;
+        }
+
+        var user = await AuthService.AuthenticateAsync(Username, Password);
+        if (user != null)
+        {
+            SessionState.Login(user);
+        }
+        else
+        {
+            ErrorMessage = "arascori momxmarebeli an paroli";
+        }
+    }
+}

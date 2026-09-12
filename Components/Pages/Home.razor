@@ -1,0 +1,37 @@
+@page "/"
+@using BAGEBI.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject UserSessionState SessionState
+@rendermode InteractiveServer
+@implements IDisposable
+
+@if (!SessionState.IsLoggedIn)
+{
+    <div class="page-container">
+        <LoginComponent />
+    </div>
+}
+else if (SessionState.IsAdmin)
+{
+    <div class="dash-container">
+        <AdminDashboard />
+    </div>
+}
+else
+{
+    <div class="page-container">
+        <KindergartenDashboard />
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        SessionState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        SessionState.OnChange -= StateHasChanged;
+    }
+}
