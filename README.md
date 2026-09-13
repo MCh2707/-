@@ -110,7 +110,14 @@ ORM ფენა, რომელიც უზრუნველყოფს C# 
 
 ---
 
+### მედია
 
+<img src="images/admin1.png">
+
+<p align="center">
+  <img src="images/registracia1.png" width="500">
+  <img src="images/registracia3.png" width="500">
+</p>
 
 ---
 
